@@ -1,0 +1,63 @@
+{
+  "description": "isCircling(history) (SPEC.md §7): the last 4 moves are all counter or need_more_detail, and none tabled terms not seen before them. Each move is [verdict, subject_hash or null].",
+  "cases": [
+    {
+      "name": "two positions, restated twice",
+      "moves": [
+        ["offer", "h1"],
+        ["counter", "h2"],
+        ["counter", "h1"],
+        ["counter", "h2"],
+        ["counter", "h1"],
+        ["counter", "h2"]
+      ],
+      "circling": true
+    },
+    {
+      "name": "one move short",
+      "moves": [
+        ["offer", "h1"],
+        ["counter", "h2"],
+        ["counter", "h1"],
+        ["counter", "h2"],
+        ["counter", "h1"]
+      ],
+      "circling": false
+    },
+    {
+      "name": "asking each other the same thing",
+      "moves": [
+        ["offer", "h1"],
+        ["need_more_detail", null],
+        ["need_more_detail", null],
+        ["need_more_detail", null],
+        ["need_more_detail", null]
+      ],
+      "circling": true
+    },
+    {
+      "name": "a small concession is progress",
+      "moves": [
+        ["offer", "h1"],
+        ["counter", "h2"],
+        ["counter", "h1"],
+        ["counter", "h2"],
+        ["counter", "h1"],
+        ["counter", "h3"]
+      ],
+      "circling": false
+    },
+    {
+      "name": "an approval in the window",
+      "moves": [
+        ["offer", "h1"],
+        ["counter", "h2"],
+        ["counter", "h1"],
+        ["approve", "h1"],
+        ["counter", "h2"],
+        ["counter", "h1"]
+      ],
+      "circling": false
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "description": "canonicalize(subject) sorts keys at every level, by UTF-16 code unit, and drops nothing but undefined; subject_hash is \"sha256:\" + hex SHA-256 of its UTF-8 bytes (SPEC.md §3).",
+  "cases": [
+    {
+      "name": "meeting terms",
+      "input": {
+        "slot": {
+          "start": "2026-10-14T10:00:00Z",
+          "end": "2026-10-14T10:30:00Z"
+        },
+        "duration_min": 30
+      },
+      "canonical": "{\"duration_min\":30,\"slot\":{\"end\":\"2026-10-14T10:30:00Z\",\"start\":\"2026-10-14T10:00:00Z\"}}",
+      "subject_hash": "sha256:a6819e25e6eec105881568b2a3d4e06f03bfac1b7b2c147bab87e6861af716c8"
+    },
+    {
+      "name": "same terms, keys in another order",
+      "input": {
+        "duration_min": 30,
+        "slot": {
+          "end": "2026-10-14T10:30:00Z",
+          "start": "2026-10-14T10:00:00Z"
+        }
+      },
+      "canonical": "{\"duration_min\":30,\"slot\":{\"end\":\"2026-10-14T10:30:00Z\",\"start\":\"2026-10-14T10:00:00Z\"}}",
+      "subject_hash": "sha256:a6819e25e6eec105881568b2a3d4e06f03bfac1b7b2c147bab87e6861af716c8"
+    },
+    {
+      "name": "money, arrays and booleans",
+      "input": {
+        "price": {
+          "currency": "EUR",
+          "amount": "1500.00"
+        },
+        "days": ["2026-11-02", "2026-11-03"],
+        "delivery": true
+      },
+      "canonical": "{\"days\":[\"2026-11-02\",\"2026-11-03\"],\"delivery\":true,\"price\":{\"amount\":\"1500.00\",\"currency\":\"EUR\"}}",
+      "subject_hash": "sha256:6b07e465b36a22ad60fa74d9cf311d5be4d7833a2db4ec7cb0624719f64c4910"
+    },
+    {
+      "name": "non-ASCII labels survive as UTF-8",
+      "input": {
+        "note": "Встреча в кафе",
+        "place": "café"
+      },
+      "canonical": "{\"note\":\"Встреча в кафе\",\"place\":\"café\"}",
+      "subject_hash": "sha256:485be4bc83fdadfd5b5bfaf71afed7818ff432b20acaaa9754bc35274dd16e66"
+    },
+    {
+      "name": "arrays keep their order",
+      "input": {
+        "days": ["2026-11-03", "2026-11-02"]
+      },
+      "canonical": "{\"days\":[\"2026-11-03\",\"2026-11-02\"]}",
+      "subject_hash": "sha256:f96c5ae801e9b3091f11a086f175b5beb1b35186d5b01b3355b66453f47b3c0a"
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "description": "validateSubject(schema, subject) (SPEC.md §4). A rejected case names the path of the first problem; the message after it is the implementation's own.",
+  "schema": {
+    "price": { "type": "money", "label": "Price" },
+    "rent": { "type": "money", "label": "Rent", "currency": "EUR", "optional": true },
+    "ready_by": { "type": "date", "label": "Ready by" },
+    "slots": { "type": "timerange", "label": "Proposed times", "repeated": true, "optional": true },
+    "seats": { "type": "int", "label": "Seats", "optional": true },
+    "place": { "type": "enum", "label": "Place", "values": ["office", "cafe"], "optional": true },
+    "note": { "type": "string", "label": "Note", "optional": true, "max_len": 10 }
+  },
+  "cases": [
+    {
+      "name": "minimal",
+      "subject": { "price": { "amount": "10", "currency": "EUR" }, "ready_by": "2026-11-30" },
+      "valid": true
+    },
+    {
+      "name": "JPY has no minor unit",
+      "subject": { "price": { "amount": "1500", "currency": "JPY" }, "ready_by": "2026-11-30" },
+      "valid": true
+    },
+    {
+      "name": "KWD has three",
+      "subject": { "price": { "amount": "1.250", "currency": "KWD" }, "ready_by": "2026-11-30" },
+      "valid": true
+    },
+    {
+      "name": "leap day",
+      "subject": { "price": { "amount": "10", "currency": "EUR" }, "ready_by": "2028-02-29" },
+      "valid": true
+    },
+    {
+      "name": "repeated time ranges",
+      "subject": {
+        "price": { "amount": "10", "currency": "EUR" },
+        "ready_by": "2026-11-30",
+        "slots": [{ "start": "2026-11-02T10:00:00+01:00", "end": "2026-11-02T11:00:00+01:00" }]
+      },
+      "valid": true
+    },
+    {
+      "name": "a float amount",
+      "subject": { "price": { "amount": 10, "currency": "EUR" }, "ready_by": "2026-11-30" },
+      "error_path": "subject.price"
+    },
+    {
+      "name": "too many fraction digits",
+      "subject": { "price": { "amount": "15.001", "currency": "EUR" }, "ready_by": "2026-11-30" },
+      "error_path": "subject.price"
+    },
+    {
+      "name": "a negative amount",
+      "subject": { "price": { "amount": "-5", "currency": "EUR" }, "ready_by": "2026-11-30" },
+      "error_path": "subject.price"
+    },
+    {
+      "name": "a lower-case currency",
+      "subject": { "price": { "amount": "5", "currency": "eur" }, "ready_by": "2026-11-30" },
+      "error_path": "subject.price"
+    },
+    {
+      "name": "an extra key in money",
+      "subject": {
+        "price": { "amount": "5", "currency": "EUR", "note": "x" },
+        "ready_by": "2026-11-30"
+      },
+      "error_path": "subject.price"
+    },
+    {
+      "name": "a currency the schema fixed otherwise",
+      "subject": {
+        "price": { "amount": "5", "currency": "EUR" },
+        "rent": { "amount": "900", "currency": "USD" },
+        "ready_by": "2026-11-30"
+      },
+      "error_path": "subject.rent"
+    },
+    {
+      "name": "a day that does not exist",
+      "subject": { "price": { "amount": "5", "currency": "EUR" }, "ready_by": "2026-02-30" },
+      "error_path": "subject.ready_by"
+    },
+    {
+      "name": "a moment where a day is declared",
+      "subject": {
+        "price": { "amount": "5", "currency": "EUR" },
+        "ready_by": "2026-11-30T10:00:00Z"
+      },
+      "error_path": "subject.ready_by"
+    },
+    {
+      "name": "an undeclared field",
+      "subject": {
+        "price": { "amount": "5", "currency": "EUR" },
+        "ready_by": "2026-11-30",
+        "colour": "red"
+      },
+      "error_path": "subject.colour"
+    },
+    {
+      "name": "a required field missing",
+      "subject": { "ready_by": "2026-11-30" },
+      "error_path": "subject.price"
+    },
+    {
+      "name": "a range that ends before it starts",
+      "subject": {
+        "price": { "amount": "5", "currency": "EUR" },
+        "ready_by": "2026-11-30",
+        "slots": [{ "start": "2026-11-02T11:00:00Z", "end": "2026-11-02T10:00:00Z" }]
+      },
+      "error_path": "subject.slots[0]"
+    },
+    {
+      "name": "an empty repeated field",
+      "subject": {
+        "price": { "amount": "5", "currency": "EUR" },
+        "ready_by": "2026-11-30",
+        "slots": []
+      },
+      "error_path": "subject.slots"
+    },
+    {
+      "name": "a non-integer int",
+      "subject": {
+        "price": { "amount": "5", "currency": "EUR" },
+        "ready_by": "2026-11-30",
+        "seats": 2.5
+      },
+      "error_path": "subject.seats"
+    },
+    {
+      "name": "a value outside the enum",
+      "subject": {
+        "price": { "amount": "5", "currency": "EUR" },
+        "ready_by": "2026-11-30",
+        "place": "moon"
+      },
+      "error_path": "subject.place"
+    },
+    {
+      "name": "a string past max_len",
+      "subject": {
+        "price": { "amount": "5", "currency": "EUR" },
+        "ready_by": "2026-11-30",
+        "note": "far too long"
+      },
+      "error_path": "subject.note"
+    }
+  ]
+}

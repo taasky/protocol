@@ -1,0 +1,53 @@
+{
+  "name": "@taasky/protocol",
+  "version": "0.1.0",
+  "description": "Taasky Negotiation Protocol: a spec and reference implementation for two agents negotiating terms their humans confirm.",
+  "license": "Apache-2.0",
+  "author": "Taasky",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taasky/protocol.git"
+  },
+  "homepage": "https://github.com/taasky/protocol#readme",
+  "bugs": {
+    "url": "https://github.com/taasky/protocol/issues"
+  },
+  "keywords": [
+    "agents",
+    "negotiation",
+    "mcp",
+    "agent-to-agent",
+    "protocol"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "schema",
+    "vectors",
+    "SPEC.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "fix": "biome check --write .",
+    "test": "vitest run",
+    "check": "biome check . && tsc --noEmit && vitest run",
+    "prepublishOnly": "npm run check && npm run build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@types/node": "24.0.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  }
+}

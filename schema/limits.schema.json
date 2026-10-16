@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/taasky/protocol/schema/limits.schema.json",
+  "title": "Private limits",
+  "description": "A party's bounds per field of its own subject schema (SPEC.md §7). Seen by the relay only. Which shape a field takes, and what its bounds look like, follows from the field's declared type: min/max for int, money, date and timerange; one_of for enum; equals for bool; nothing for string.",
+  "type": "object",
+  "propertyNames": { "pattern": "^[a-z][a-z0-9_]{0,31}$" },
+  "additionalProperties": {
+    "oneOf": [
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": { "min": {}, "max": {} }
+      },
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["one_of"],
+        "properties": {
+          "one_of": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        }
+      },
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["equals"],
+        "properties": { "equals": { "type": "boolean" } }
+      }
+    ]
+  }
+}

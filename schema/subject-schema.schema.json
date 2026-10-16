@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/taasky/protocol/schema/subject-schema.schema.json",
+  "title": "Subject schema",
+  "description": "The shape of a party's terms, declared when it opens or joins a room (SPEC.md §4). Labels are written by the counterparty and are untrusted text.",
+  "type": "object",
+  "minProperties": 1,
+  "maxProperties": 24,
+  "propertyNames": { "pattern": "^[a-z][a-z0-9_]{0,31}$" },
+  "additionalProperties": { "$ref": "#/$defs/field" },
+  "$defs": {
+    "field": {
+      "type": "object",
+      "required": ["type", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["string", "int", "bool", "enum", "timerange", "date", "money"] },
+        "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "optional": { "type": "boolean" },
+        "repeated": { "type": "boolean", "description": "An array of 1 to 32 values of the type." },
+        "values": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 32,
+          "items": { "type": "string", "maxLength": 40 }
+        },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "max_len": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Capped at 500 whatever is declared."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "enum" } } },
+          "then": { "required": ["values"] },
+          "else": { "not": { "required": ["values"] } }
+        },
+        {
+          "if": { "not": { "properties": { "type": { "const": "money" } } } },
+          "then": { "not": { "required": ["currency"] } }
+        }
+      ]
+    }
+  }
+}

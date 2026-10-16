@@ -1,0 +1,138 @@
+{
+  "description": "Private limits (SPEC.md §7). check: where terms break one party's limits. cannot_meet: the fields on which two parties' limits leave no deal.",
+  "schema": {
+    "price": { "type": "money", "label": "Price", "currency": "EUR" },
+    "meeting_time": { "type": "timerange", "label": "Meeting time" },
+    "seats": { "type": "int", "label": "Seats" },
+    "pickup": { "type": "date", "label": "Pickup day" },
+    "place": { "type": "enum", "label": "Place", "values": ["office", "cafe", "online"] },
+    "delivery": { "type": "bool", "label": "Delivery" },
+    "note": { "type": "string", "label": "Note", "optional": true }
+  },
+  "invalid": [
+    { "name": "a field not in the schema", "limits": { "colour": { "max": 1 } } },
+    { "name": "a string field", "limits": { "note": { "max": 1 } } },
+    { "name": "min on an enum", "limits": { "place": { "max": "cafe" } } },
+    { "name": "an enum value that is not declared", "limits": { "place": { "one_of": ["moon"] } } },
+    {
+      "name": "another currency than the field's",
+      "limits": { "price": { "max": { "amount": "100", "currency": "USD" } } }
+    },
+    { "name": "min above max", "limits": { "seats": { "min": 5, "max": 4 } } },
+    { "name": "a bare number for money", "limits": { "price": { "max": 100 } } },
+    { "name": "a day that does not exist", "limits": { "pickup": { "min": "2026-02-30" } } }
+  ],
+  "check": [
+    {
+      "name": "inside, touching the bounds",
+      "limits": {
+        "price": { "max": { "amount": "100.00", "currency": "EUR" } },
+        "meeting_time": { "min": "2026-12-01T09:00:00+01:00", "max": "2026-12-01T18:00:00+01:00" },
+        "place": { "one_of": ["cafe", "online"] }
+      },
+      "subject": {
+        "price": { "amount": "100", "currency": "EUR" },
+        "meeting_time": {
+          "start": "2026-12-01T09:00:00+01:00",
+          "end": "2026-12-01T10:00:00+01:00"
+        },
+        "place": "cafe"
+      },
+      "breaches": []
+    },
+    {
+      "name": "every breach, with the bound it broke",
+      "limits": {
+        "price": { "max": { "amount": "100.00", "currency": "EUR" } },
+        "meeting_time": { "min": "2026-12-01T09:00:00+01:00", "max": "2026-12-01T18:00:00+01:00" },
+        "place": { "one_of": ["cafe", "online"] }
+      },
+      "subject": {
+        "price": { "amount": "100.01", "currency": "EUR" },
+        "meeting_time": {
+          "start": "2026-12-01T17:30:00+01:00",
+          "end": "2026-12-01T18:30:00+01:00"
+        },
+        "place": "office"
+      },
+      "breaches": [
+        {
+          "field": "price",
+          "rule": "above_max",
+          "bound": { "amount": "100.00", "currency": "EUR" }
+        },
+        { "field": "meeting_time", "rule": "above_max", "bound": "2026-12-01T18:00:00+01:00" },
+        { "field": "place", "rule": "not_allowed", "bound": ["cafe", "online"] }
+      ]
+    },
+    {
+      "name": "times compare across offsets",
+      "limits": { "meeting_time": { "min": "2026-12-01T09:00:00+01:00" } },
+      "subject": {
+        "meeting_time": { "start": "2026-12-01T08:30:00Z", "end": "2026-12-01T09:00:00Z" }
+      },
+      "breaches": []
+    },
+    {
+      "name": "amounts past 2^53 compare exactly",
+      "limits": { "price": { "max": { "amount": "999999999999999.99", "currency": "EUR" } } },
+      "subject": { "price": { "amount": "999999999999999.98", "currency": "EUR" } },
+      "breaches": []
+    },
+    {
+      "name": "below min, and a bool that is not the one asked for",
+      "limits": { "seats": { "min": 2 }, "delivery": { "equals": true } },
+      "subject": { "seats": 1, "delivery": false },
+      "breaches": [
+        { "field": "seats", "rule": "below_min", "bound": 2 },
+        { "field": "delivery", "rule": "not_equal", "bound": true }
+      ]
+    }
+  ],
+  "cannot_meet": [
+    {
+      "name": "a buyer's max below a seller's min",
+      "a": { "price": { "max": { "amount": "80.00", "currency": "EUR" } } },
+      "b": { "price": { "min": { "amount": "90.00", "currency": "EUR" } } },
+      "fields": ["price"]
+    },
+    {
+      "name": "a max equal to a min is a deal",
+      "a": { "price": { "max": { "amount": "80.00", "currency": "EUR" } } },
+      "b": { "price": { "min": { "amount": "80", "currency": "EUR" } } },
+      "fields": []
+    },
+    {
+      "name": "a meeting needs time between start and end",
+      "a": { "meeting_time": { "max": "2026-12-01T12:00:00Z" } },
+      "b": { "meeting_time": { "min": "2026-12-01T12:00:00Z" } },
+      "fields": ["meeting_time"]
+    },
+    {
+      "name": "enums, bools and dates",
+      "a": {
+        "place": { "one_of": ["office"] },
+        "delivery": { "equals": true },
+        "pickup": { "max": "2026-12-01" }
+      },
+      "b": {
+        "place": { "one_of": ["cafe"] },
+        "delivery": { "equals": false },
+        "pickup": { "min": "2026-12-02" }
+      },
+      "fields": ["place", "delivery", "pickup"]
+    },
+    {
+      "name": "one side set no limits",
+      "a": { "price": { "max": { "amount": "1.00", "currency": "EUR" } } },
+      "b": null,
+      "fields": []
+    },
+    {
+      "name": "two maxes always meet",
+      "a": { "seats": { "max": 2 } },
+      "b": { "seats": { "max": 1 } },
+      "fields": []
+    }
+  ]
+}

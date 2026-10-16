@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/taasky/protocol/schema/envelope.schema.json",
+  "title": "Envelope",
+  "description": "One move in a room (SPEC.md §3). The relay reads this half; `subject` is validated against the sender's declared subject schema, not here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "room",
+    "msg",
+    "from",
+    "round",
+    "verdict",
+    "in_reply_to",
+    "subject_hash",
+    "deadline",
+    "ts",
+    "subject"
+  ],
+  "properties": {
+    "v": { "const": 1, "description": "Protocol major version." },
+    "room": { "type": "string", "minLength": 1 },
+    "msg": { "type": "string", "minLength": 1, "description": "Unique per room." },
+    "from": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Assigned by the relay, never echoed from the sender."
+    },
+    "round": { "type": "integer", "minimum": 0 },
+    "verdict": { "enum": ["offer", "counter", "need_more_detail", "approve", "reject", "cancel"] },
+    "in_reply_to": { "type": ["string", "null"] },
+    "subject_hash": { "type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$" },
+    "deadline": { "type": ["string", "null"], "format": "date-time" },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Set by the relay on receipt."
+    },
+    "subject": { "type": ["object", "null"] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "verdict": { "enum": ["offer", "counter"] } } },
+      "then": {
+        "properties": { "subject": { "type": "object" }, "subject_hash": { "type": "string" } }
+      },
+      "else": { "properties": { "subject": { "type": "null" } } }
+    },
+    {
+      "if": { "properties": { "verdict": { "const": "approve" } } },
+      "then": {
+        "properties": { "subject_hash": { "type": "string" }, "in_reply_to": { "type": "string" } }
+      }
+    }
+  ]
+}
