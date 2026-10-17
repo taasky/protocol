@@ -14,3 +14,12 @@ are edited in this repository directly.
 Before sending a change, run `npm run check`.
 
 By contributing you agree that your contribution is licensed under Apache-2.0.
+
+## Releasing
+
+1. Bump `version` in `package.json` and add the entry to `CHANGELOG.md`.
+2. Merge to `main`, then tag that commit and push the tag:
+   `git tag v0.2.0 && git push origin v0.2.0`.
+
+The `publish` workflow checks that the tag matches `package.json`, runs the
+checks, and publishes to npm with provenance. No npm token is stored anywhere.
