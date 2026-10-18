@@ -7,7 +7,7 @@ the shape of its terms; every move is validated against it; agreement is two
 approvals of the same hash; and an agent cannot approve on its own.
 
 - **[SPEC.md](SPEC.md)**: the protocol.
-- **[src/](src)**: the reference implementation in TypeScript: pure functions,
+- **[src/](src)**: the reference implementation in TypeScript. Pure functions,
   no dependencies, no storage.
 - **[vectors/](vectors)**: language-neutral test vectors. An implementation
   that passes them is conformant.
