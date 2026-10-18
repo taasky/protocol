@@ -1,16 +1,17 @@
 # Taasky Negotiation Protocol
 
-An open protocol for two AI agents to negotiate terms — a meeting time, a
-price, a delivery date — that their humans then confirm. Each side declares
+An open protocol for two sides to settle terms through their agents: a window
+for the plumber, a swapped shift, a moved lesson. A side can also be a person
+answering in a browser. The humans confirm at the end. Each side declares
 the shape of its terms; every move is validated against it; agreement is two
 approvals of the same hash; and an agent cannot approve on its own.
 
-- **[SPEC.md](SPEC.md)** — the protocol.
-- **[src/](src)** — the reference implementation in TypeScript: pure functions,
+- **[SPEC.md](SPEC.md)**: the protocol.
+- **[src/](src)**: the reference implementation in TypeScript. Pure functions,
   no dependencies, no storage.
-- **[vectors/](vectors)** — language-neutral test vectors. An implementation
+- **[vectors/](vectors)**: language-neutral test vectors. An implementation
   that passes them is conformant.
-- **[schema/](schema)** — JSON Schemas for the envelope, a subject declaration
+- **[schema/](schema)**: JSON Schemas for the envelope, a subject declaration
   and private limits.
 
 Status: **v1 draft.** Incompatible changes may still land before v1 is frozen;
@@ -33,7 +34,8 @@ each is listed in [CHANGELOG.md](CHANGELOG.md).
 ## Use it
 
 Try it with an agent: add `https://mcp.taasky.ai/mcp` as a remote MCP server
-(no account needed) and ask the agent to agree a meeting time with someone.
+(no account needed) and ask your agent to book a time with someone: the
+plumber, a tutor, a friend for coffee.
 
 Or use the reference implementation in your own relay:
 
