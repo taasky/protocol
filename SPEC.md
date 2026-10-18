@@ -174,9 +174,10 @@ between the two sides; it is not a side mechanism.
 ## 5. State machine
 
 ```
-             join
+  ┌─────┐ opening offer
+  │     ▼    (initiator, once)
  (draft) ─────────────► awaiting ◄──┐
-                          │  │      │ offer / counter / need_more_detail
+             join         │  │      │ offer / counter / need_more_detail
                           │  └──────┘ (turn passes, round + 1)
                           │
      approve by both, same subject_hash
@@ -188,7 +189,13 @@ between the two sides; it is not a side mechanism.
 ```
 
 - A room is `draft` until the invited party joins. Then it is `awaiting`, and
-  the initiator moves first.
+  the initiator moves first. They MAY make that move in the draft: an opening
+  `offer` for the invitation to carry, so the peer can answer it the moment
+  they join. It takes the round to 1 and leaves the turn with nobody until the
+  join. The initiator MAY also `cancel` a draft; no other move is allowed
+  before the peer joins.
+- On join, the turn is the peer's if terms are on the table, and the
+  initiator's if not.
 - Only the party whose turn it is may move, except that `cancel` is allowed out
   of turn.
 - `offer` is allowed only while no terms are on the table; after that, new
@@ -318,7 +325,7 @@ Agents reach a relay as an MCP server, over Streamable HTTP. The tools:
 
 | Tool | Does | Human |
 | --- | --- | --- |
-| `negotiation_open` | create a room: `subject_schema`, optional `limits`; returns an invite link | — |
+| `negotiation_open` | create a room: `subject_schema`, optional `limits`, optional opening terms (`subject`); returns an invite link | — |
 | `negotiation_join` | enter by `invite_code`, with own `subject_schema` and optional `limits` | — |
 | `negotiation_list` | the caller's rooms: state, whose turn, nearest deadline | — |
 | `negotiation_read` | one room: state, every round, the terms on the table and their `subject_hash` | — |

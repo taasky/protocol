@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  afterJoin,
   cannotMeet,
   canonicalize,
   checkLimits,
@@ -101,13 +102,24 @@ describe("moves.json", () => {
 
   for (const c of moves.cases) {
     it(c.name, async () => {
-      let room: RoomView = { id: "rm_1", state: "awaiting", round: 0, turn: "a", deadline: null };
+      let room: RoomView = {
+        id: "rm_1",
+        state: "start" in c && c.start === "draft" ? "draft" : "awaiting",
+        round: 0,
+        turn: "a",
+        deadline: null,
+      };
       const history: MoveHistoryItem[] = [];
       for (const [i, step] of (c.steps as Step[]).entries()) {
+        if (step.join) {
+          room = { ...room, ...afterJoin(room, { initiator: "a", peer: step.join }) };
+          if (step.room) expect(room, `step ${i}`).toMatchObject(step.room);
+          continue;
+        }
         const onTable = history.findLast((m) => m.verdict === "offer" || m.verdict === "counter");
         const req = {
-          actor: step.actor,
-          verdict: step.verdict,
+          actor: step.actor!,
+          verdict: step.verdict!,
           ...(step.terms && { subject: terms[step.terms] }),
           ...(step.subject !== undefined && { subject: step.subject }),
           ...(step.approve && {
@@ -125,7 +137,7 @@ describe("moves.json", () => {
         history.push({
           id: `msg_${history.length + 1}`,
           seq: history.length + 1,
-          from_id: step.actor,
+          from_id: step.actor!,
           verdict: plan.message.verdict,
           subject_hash: plan.message.subject_hash,
         });
@@ -137,8 +149,10 @@ describe("moves.json", () => {
 });
 
 interface Step {
-  actor: string;
-  verdict: Verdict;
+  actor?: string;
+  verdict?: Verdict;
+  /** The peer joining a draft, instead of a move. */
+  join?: string;
   terms?: string;
   subject?: unknown;
   approve?: string;
