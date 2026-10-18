@@ -1,6 +1,6 @@
 {
   "name": "@taasky/protocol",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Taasky Negotiation Protocol: a spec and reference implementation for two agents negotiating terms their humans confirm.",
   "license": "Apache-2.0",
   "author": "Taasky",

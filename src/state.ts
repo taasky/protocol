@@ -43,8 +43,11 @@ export function assertMoveAllowed(
   if (isTerminal(room.state)) {
     throw new MoveError(`room is ${room.state} and accepts no further moves`);
   }
+  // A draft is the initiator's alone: they may table opening terms for the
+  // invitation to carry, or withdraw it. Everything else waits for the peer.
   if (room.state === "draft") {
-    throw new MoveError("peer has not joined yet");
+    if (verdict === "cancel") return;
+    if (verdict !== "offer" || room.turn !== actor) throw new MoveError("peer has not joined yet");
   }
   if (room.turn !== actor && verdict !== "cancel") {
     throw new MoveError("not your turn");
@@ -72,6 +75,10 @@ export function nextState(
     return { state: "closed", round: room.round, turn: null, deadline: room.deadline };
   }
   const { deadline } = opts;
+  // The opening offer of a draft: the turn is the peer's, who is not here yet.
+  if (room.state === "draft" && verdict === "offer") {
+    return { state: "draft", round: room.round + 1, turn: null, deadline };
+  }
   if (verdict === "approve") {
     return opts.bothApproved
       ? { state: "agreed", round: room.round, turn: null, deadline }
@@ -91,6 +98,24 @@ export function nextState(
     };
   }
   throw new MoveError(`unhandled verdict ${verdict}`);
+}
+
+/**
+ * The room once the peer joins (§5). The initiator moves first: they opened
+ * the room, they state terms. If they already did, in the draft, the peer
+ * answers them.
+ */
+export function afterJoin(
+  room: RoomView,
+  ids: { initiator: string; peer: string },
+): Omit<RoomView, "id"> {
+  if (room.state !== "draft") throw new MoveError(`room is ${room.state}, not waiting for a peer`);
+  return {
+    state: "awaiting",
+    round: room.round,
+    turn: room.round > 0 ? ids.peer : ids.initiator,
+    deadline: room.deadline,
+  };
 }
 
 // Two parties per room in v1 (SPEC.md §1 non-goals), so "the other one"

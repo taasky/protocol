@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { type MoveHistoryItem, type MoveParty, type MoveRequest, planMove } from "../src/move.js";
-import { MoveError, nextState, type RoomView } from "../src/state.js";
+import { afterJoin, MoveError, nextState, type RoomView } from "../src/state.js";
 import { parseSchema } from "../src/subject.js";
 
 const NOW = new Date("2026-10-12T10:00:00Z");
@@ -40,6 +40,54 @@ async function play(r: ReturnType<typeof joinedRoom>, req: MoveRequest, now = NO
   r.room = { ...r.room, ...plan.next };
   return plan;
 }
+
+describe("an opening offer in a draft", () => {
+  const draft = (): RoomView => ({
+    id: "rm_1",
+    state: "draft",
+    round: 0,
+    turn: A.id,
+    deadline: null,
+  });
+
+  it("stays a draft, then hands the peer the turn on join", async () => {
+    const plan = await planMove(
+      draft(),
+      [A],
+      [],
+      { actor: A.id, verdict: "offer", subject: slot(10) },
+      NOW,
+    );
+    expect(plan.next).toMatchObject({ state: "draft", round: 1, turn: null });
+    const room = { id: "rm_1", ...plan.next };
+    expect(afterJoin(room, { initiator: A.id, peer: B.id })).toMatchObject({
+      state: "awaiting",
+      round: 1,
+      turn: B.id,
+    });
+  });
+
+  it("gives the initiator the first move when they opened without terms", () => {
+    expect(afterJoin(draft(), { initiator: A.id, peer: B.id })).toMatchObject({
+      state: "awaiting",
+      round: 0,
+      turn: A.id,
+    });
+  });
+
+  it("allows nothing else but withdrawing before the peer joins", async () => {
+    const offered = { ...draft(), round: 1, turn: null };
+    const history = [{ id: "msg_1", seq: 1, from_id: A.id, verdict: "offer", subject_hash: "h" }];
+    await expect(
+      planMove(offered, [A], history, { actor: A.id, verdict: "counter", subject: slot(11) }, NOW),
+    ).rejects.toThrow("peer has not joined yet");
+    await expect(
+      planMove(draft(), [A, B], [], { actor: B.id, verdict: "offer", subject: slot(11) }, NOW),
+    ).rejects.toThrow("peer has not joined yet");
+    const cancel = await planMove(offered, [A], history, { actor: A.id, verdict: "cancel" }, NOW);
+    expect(cancel.next.state).toBe("closed");
+  });
+});
 
 describe("a negotiation from offer to agreement", () => {
   it("passes the turn on every move and agrees on two approvals of one hash", async () => {
